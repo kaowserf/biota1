@@ -8,20 +8,29 @@ workflows:
     environment:
       flutter: stable
       xcode: 16.2
+      vars:
+        CERTIFICATE_PRIVATE_KEY_PATH: /tmp/cert_key.pem
     scripts:
-      - name: Set up code signing
+      - name: Generate private key
         script: |
-          openssl genrsa -out /tmp/cert_key.pem 2048
+          openssl genrsa -out $CERTIFICATE_PRIVATE_KEY_PATH 2048
+          echo "Private key generated"
+      - name: Create certificate and fetch profiles
+        script: |
           app-store-connect certificates create \
             --type IOS_DISTRIBUTION \
-            --certificate-key @file:/tmp/cert_key.pem \
-            --save || true
+            --certificate-key @file:$CERTIFICATE_PRIVATE_KEY_PATH \
+            --save
           app-store-connect fetch-signing-files "com.biota1.biota1Ad" \
             --type IOS_APP_STORE \
-            --certificate-key @file:/tmp/cert_key.pem \
+            --certificate-key @file:$CERTIFICATE_PRIVATE_KEY_PATH \
             --create
+      - name: Set up keychain and profiles
+        script: |
           keychain initialize
           xcode-project use-profiles
+          echo "=== Certs in keychain ==="
+          security find-identity -v -p codesigning
       - name: Get Flutter packages
         script: flutter pub get
       - name: Install CocoaPods
