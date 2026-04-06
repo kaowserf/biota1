@@ -1,0 +1,39 @@
+workflows:
+  ios-testflight:
+    name: iOS TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.biota1.biota1Ad
+      flutter: stable
+      xcode: latest
+    scripts:
+      - name: Set up code signing
+        script: |
+          app-store-connect fetch-signing-files com.biota1.biota1Ad \
+            --type IOS_APP_STORE \
+            --create
+      - name: Use profiles and certificates
+        script: keychain initialize
+      - name: Set up provisioning profiles
+        script: |
+          xcode-project use-profiles
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Build iOS
+        script: |
+          flutter build ipa \
+            --release \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - External Testers
