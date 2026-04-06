@@ -26,29 +26,13 @@ workflows:
         script: flutter pub get
       - name: Install CocoaPods
         script: cd ios && pod install
-      - name: Build Flutter iOS (no codesign)
+      - name: Build and sign IPA
         script: |
-          flutter build ios \
+          flutter build ipa \
             --release \
-            --no-codesign
-      - name: Archive
-        script: |
-          xcodebuild -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -archivePath build/ios/Runner.xcarchive \
-            -destination 'generic/platform=iOS' \
-            archive \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=CX494385XA
-      - name: Export IPA
-        script: |
-          xcodebuild -exportArchive \
-            -archivePath build/ios/Runner.xcarchive \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist /Users/builder/export_options.plist
+            --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
-      - '**/*.ipa'
     publishing:
       app_store_connect:
         auth: integration
