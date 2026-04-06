@@ -11,22 +11,22 @@ workflows:
     scripts:
       - name: Set up code signing
         script: |
-          # Generate a private key for certificate signing
+          # Generate RSA private key for certificate
           openssl genrsa -out /tmp/cert_key.pem 2048
 
-          # Create distribution certificate using the private key
+          # Create distribution certificate
           app-store-connect certificates create \
             --type IOS_DISTRIBUTION \
-            --certificate-key /tmp/cert_key.pem \
+            --certificate-key @file:/tmp/cert_key.pem \
             --save || true
 
-          # Fetch signing files with the private key
+          # Fetch signing files
           app-store-connect fetch-signing-files "com.biota1.biota1Ad" \
             --type IOS_APP_STORE \
-            --certificate-key /tmp/cert_key.pem \
+            --certificate-key @file:/tmp/cert_key.pem \
             --create
 
-          # Initialize keychain and apply profiles
+          # Set up keychain and profiles
           keychain initialize
           xcode-project use-profiles
       - name: Get Flutter packages
