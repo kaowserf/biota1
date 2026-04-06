@@ -11,14 +11,19 @@ workflows:
     scripts:
       - name: Set up code signing
         script: |
-          # Create a new private key for certificate signing
-          app-store-connect create-certificate \
+          # Generate a private key for certificate signing
+          openssl genrsa -out /tmp/cert_key.pem 2048
+
+          # Create distribution certificate using the private key
+          app-store-connect certificates create \
             --type IOS_DISTRIBUTION \
+            --certificate-key /tmp/cert_key.pem \
             --save || true
 
-          # Fetch signing files (certificate + profile), create if missing
+          # Fetch signing files with the private key
           app-store-connect fetch-signing-files "com.biota1.biota1Ad" \
             --type IOS_APP_STORE \
+            --certificate-key /tmp/cert_key.pem \
             --create
 
           # Initialize keychain and apply profiles
