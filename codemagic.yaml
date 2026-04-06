@@ -11,16 +11,23 @@ workflows:
     scripts:
       - name: Set up code signing
         script: |
+          # Create a new private key for certificate signing
+          app-store-connect create-certificate \
+            --type IOS_DISTRIBUTION \
+            --save || true
+
+          # Fetch signing files (certificate + profile), create if missing
           app-store-connect fetch-signing-files "com.biota1.biota1Ad" \
             --type IOS_APP_STORE \
             --create
+
+          # Initialize keychain and apply profiles
           keychain initialize
+          xcode-project use-profiles
       - name: Get Flutter packages
         script: flutter pub get
       - name: Install CocoaPods
         script: cd ios && pod install
-      - name: Apply provisioning profiles
-        script: xcode-project use-profiles
       - name: Build Flutter iOS (no codesign)
         script: |
           flutter build ios \
