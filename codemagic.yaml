@@ -11,22 +11,15 @@ workflows:
     scripts:
       - name: Set up code signing
         script: |
-          # Generate RSA private key for certificate
           openssl genrsa -out /tmp/cert_key.pem 2048
-
-          # Create distribution certificate
           app-store-connect certificates create \
             --type IOS_DISTRIBUTION \
             --certificate-key @file:/tmp/cert_key.pem \
             --save || true
-
-          # Fetch signing files
           app-store-connect fetch-signing-files "com.biota1.biota1Ad" \
             --type IOS_APP_STORE \
             --certificate-key @file:/tmp/cert_key.pem \
             --create
-
-          # Set up keychain and profiles
           keychain initialize
           xcode-project use-profiles
       - name: Get Flutter packages
@@ -42,9 +35,19 @@ workflows:
         script: |
           xcode-project build-ipa \
             --workspace ios/Runner.xcworkspace \
-            --scheme Runner
+            --scheme Runner 2>&1 || true
+          echo "=== Full xcodebuild log ==="
+          cat /tmp/xcodebuild_logs/*.log 2>/dev/null || echo "No xcodebuild logs found"
+          # Try direct xcodebuild as fallback
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            archive \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=CX494385XA 2>&1 | tail -50
     artifacts:
       - build/ios/ipa/*.ipa
+      - build/ios/archive/*.xcarchive
       - '**/*.ipa'
       - /tmp/xcodebuild_logs/*.log
     publishing:
