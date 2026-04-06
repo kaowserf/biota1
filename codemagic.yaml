@@ -15,24 +15,22 @@ workflows:
             --type IOS_APP_STORE \
             --create
           keychain initialize
-          xcode-project use-profiles
       - name: Get Flutter packages
         script: flutter pub get
       - name: Install CocoaPods
         script: cd ios && pod install
-      - name: Set up signing in Xcode
+      - name: Apply provisioning profiles
+        script: xcode-project use-profiles
+      - name: Build Flutter iOS (no codesign)
         script: |
-          xcode-project use-profiles --project ios/Runner.xcodeproj
-      - name: Build iOS
-        script: |
-          flutter build ipa \
+          flutter build ios \
             --release \
-            --export-options-plist=/Users/builder/export_options.plist \
             --no-codesign
+      - name: Archive and export IPA
+        script: |
           xcode-project build-ipa \
             --workspace ios/Runner.xcworkspace \
-            --scheme Runner \
-            --archive-flags="-destination 'generic/platform=iOS'"
+            --scheme Runner
     artifacts:
       - build/ios/ipa/*.ipa
       - '**/*.ipa'
