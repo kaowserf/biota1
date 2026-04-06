@@ -20,13 +20,22 @@ workflows:
         script: flutter pub get
       - name: Install CocoaPods
         script: cd ios && pod install
+      - name: Set up signing in Xcode
+        script: |
+          xcode-project use-profiles --project ios/Runner.xcodeproj
       - name: Build iOS
         script: |
           flutter build ipa \
             --release \
-            --export-options-plist=/Users/builder/export_options.plist
+            --export-options-plist=/Users/builder/export_options.plist \
+            --no-codesign
+          xcode-project build-ipa \
+            --workspace ios/Runner.xcworkspace \
+            --scheme Runner \
+            --archive-flags="-destination 'generic/platform=iOS'"
     artifacts:
       - build/ios/ipa/*.ipa
+      - '**/*.ipa'
       - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
