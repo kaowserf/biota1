@@ -11,30 +11,18 @@ workflows:
         bundle_identifier: com.biota1.biota1Ad
       flutter: stable
       xcode: 16.2
-      groups:
-        - appstore_credentials
     scripts:
       - name: Set up code signing
         script: |
-          app-store-connect fetch-signing-files com.biota1.biota1Ad \
+          app-store-connect fetch-signing-files "com.biota1.biota1Ad" \
             --type IOS_APP_STORE \
-            --create \
-            --certificate-key=@file:/tmp/codemagic.key \
-            || app-store-connect fetch-signing-files com.biota1.biota1Ad \
-              --type IOS_APP_STORE \
-              --create
-      - name: Set up keychain
-        script: |
+            --create
           keychain initialize
-      - name: Set up code signing settings
-        script: |
           xcode-project use-profiles
       - name: Get Flutter packages
-        script: |
-          flutter pub get
+        script: flutter pub get
       - name: Install CocoaPods
-        script: |
-          cd ios && pod install
+        script: cd ios && pod install
       - name: Build iOS
         script: |
           flutter build ipa \
@@ -43,7 +31,6 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - flutter_drive.log
     publishing:
       app_store_connect:
         auth: integration
