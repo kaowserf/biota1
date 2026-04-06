@@ -22,32 +22,15 @@ workflows:
             --create
           keychain initialize
           xcode-project use-profiles
-
-          # Debug: show what profiles and certs are available
-          echo "=== Installed Profiles ==="
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null || echo "No profiles in MobileDevice"
-          ls -la ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/ 2>/dev/null || echo "No profiles in Xcode UserData"
-          echo "=== Keychain Certs ==="
-          security find-identity -v -p codesigning
-          echo "=== Export Options ==="
-          cat /Users/builder/export_options.plist
       - name: Get Flutter packages
         script: flutter pub get
       - name: Install CocoaPods
         script: cd ios && pod install
       - name: Build and sign IPA
         script: |
-          # Get the provisioning profile UUID
-          PROFILE_UUID=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1 | xargs -I {} /usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(/usr/bin/security cms -D -i "{}") 2>/dev/null || echo "")
-          echo "Profile UUID: $PROFILE_UUID"
-
           flutter build ipa \
             --release \
-            --export-options-plist=/Users/builder/export_options.plist \
-            -- \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=CX494385XA \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID"
+            --export-options-plist=/Users/builder/export_options.plist
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
