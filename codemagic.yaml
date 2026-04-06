@@ -35,19 +35,9 @@ workflows:
         script: |
           xcode-project build-ipa \
             --workspace ios/Runner.xcworkspace \
-            --scheme Runner 2>&1 || true
-          echo "=== Full xcodebuild log ==="
-          cat /tmp/xcodebuild_logs/*.log 2>/dev/null || echo "No xcodebuild logs found"
-          # Try direct xcodebuild as fallback
-          xcodebuild -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            archive \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=CX494385XA 2>&1 | tail -50
+            --scheme Runner
     artifacts:
       - build/ios/ipa/*.ipa
-      - build/ios/archive/*.xcarchive
       - '**/*.ipa'
       - /tmp/xcodebuild_logs/*.log
     publishing:
