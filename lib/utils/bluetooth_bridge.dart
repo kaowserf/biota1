@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -20,6 +21,14 @@ class BluetoothBridge {
 
   /// Request Bluetooth & location permissions needed for BLE scanning.
   Future<bool> requestPermissions() async {
+    // iOS does not use runtime permission_handler permissions for BLE scan/
+    // connect — the system prompts automatically on first BLE use based on
+    // Info.plist's NSBluetoothAlwaysUsageDescription. Returning true here lets
+    // FlutterBluePlus trigger that native prompt.
+    if (Platform.isIOS) {
+      return true;
+    }
+
     final statuses = await [
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
